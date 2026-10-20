@@ -295,7 +295,7 @@ class MoveWindow {
     }
 
     if (wasMaximizeFlags !== 0) {
-      win.set_unmaximize_flags(wasMaximizeFlags);
+      this._unmaximize(win, wasMaximizeFlags);
     }
 
     const position = win.get_frame_rect();
@@ -339,7 +339,7 @@ class MoveWindow {
     this._resize(win, x, y, width, height);
 
     if (wasMaximizeFlags !== 0) {
-      win.set_maximize_flags(wasMaximizeFlags);
+      this._maximize(win, wasMaximizeFlags);
     }
     return true;
   }
@@ -637,9 +637,9 @@ class MoveWindow {
     if (this._utils.toggleMaximizeOnMoveCenter()) {
       const flags = Meta.MaximizeFlags.HORIZONTAL | Meta.MaximizeFlags.VERTICAL;
       if (win.maximized_horizontally && win.maximized_vertically) {
-        win.set_unmaximize_flags(flags);
+        this._unmaximize(win, flags);
       } else {
-        win.set_maximize_flags(flags);
+        this._maximize(win, flags);
       }
       return;
     }
@@ -762,6 +762,23 @@ class MoveWindow {
     return Math.abs(p1 - p2) <= 40;
   }
 
+  // gnome-shell 49 renamed maximize/unmaximize to set_(un)maximize_flags
+  _maximize(win, flags) {
+    if (win.set_maximize_flags) {
+      win.set_maximize_flags(flags);
+    } else {
+      win.maximize(flags);
+    }
+  }
+
+  _unmaximize(win, flags) {
+    if (win.set_unmaximize_flags) {
+      win.set_unmaximize_flags(flags);
+    } else {
+      win.unmaximize(flags);
+    }
+  }
+
   // actual resizing
   _resize(win, x, y, width, height) {
     let maximizeFlags = 0;
@@ -781,10 +798,10 @@ class MoveWindow {
     }
 
     if (maximizeFlags !== 0) {
-      win.set_maximize_flags(maximizeFlags);
+      this._maximize(win, maximizeFlags);
     }
     if (unMaximizeFlags !== 0) {
-      win.set_unmaximize_flags(unMaximizeFlags);
+      this._unmaximize(win, unMaximizeFlags);
     }
 
     if (width === 0 && height === 0) {
